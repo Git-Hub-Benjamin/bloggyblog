@@ -1,0 +1,96 @@
+---
+export interface Props {
+  title: string;
+  date: Date;
+  description?: string;
+  tags?: string[];
+}
+
+import BaseLayout from './BaseLayout.astro';
+
+const { title, date, description, tags = [] } = Astro.props;
+
+const formattedDate = date.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+});
+---
+
+<BaseLayout title={`${title} | ~/blog`} description={description}>
+  <article class="post">
+    <header class="post-header">
+      <time datetime={date.toISOString()}>{formattedDate}</time>
+      <h1>{title}</h1>
+      {tags.length > 0 && (
+        <div class="tags">
+          {tags.map(tag => <span class="tag">#{tag}</span>)}
+        </div>
+      )}
+    </header>
+    
+    <div class="post-content">
+      <slot />
+    </div>
+    
+    <footer class="post-footer">
+      <a href="/blog">← back to all posts</a>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  .post-header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .post-header time {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  .post-header h1 {
+    margin-top: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    color: var(--accent);
+    font-size: 0.85rem;
+  }
+
+  .post-content {
+    line-height: 1.8;
+  }
+
+  .post-content :global(h2) {
+    margin-top: 2.5rem;
+  }
+
+  .post-content :global(h3) {
+    margin-top: 2rem;
+  }
+
+  .post-footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .post-footer a {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  .post-footer a:hover {
+    color: var(--text);
+  }
+</style>

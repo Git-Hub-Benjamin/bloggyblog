@@ -1,0 +1,74 @@
+---
+export interface Props {
+  title: string;
+  date: Date;
+  description: string;
+  slug: string;
+  tags?: string[];
+}
+
+const { title, date, description, slug, tags = [] } = Astro.props;
+
+const formattedDate = date.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric'
+});
+---
+
+<article class="post-card">
+  <time datetime={date.toISOString()}>{formattedDate}</time>
+  <h3><a href={`/blog/${slug}`}>{title}</a></h3>
+  <p>{description}</p>
+  {tags.length > 0 && (
+    <div class="tags">
+      {tags.map(tag => <span class="tag">#{tag}</span>)}
+    </div>
+  )}
+</article>
+
+<style>
+  .post-card {
+    padding: 1.5rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .post-card:last-child {
+    border-bottom: none;
+  }
+
+  .post-card time {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  .post-card h3 {
+    margin: 0.5rem 0;
+  }
+
+  .post-card h3 a {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .post-card h3 a:hover {
+    color: var(--accent);
+  }
+
+  .post-card p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    color: var(--accent);
+    font-size: 0.8rem;
+  }
+</style>

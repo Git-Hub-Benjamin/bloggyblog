@@ -1,0 +1,98 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostCard from '../components/PostCard.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+---
+
+<BaseLayout title="~/blog">
+  <section class="hero">
+    <h1>hey, i'm <span class="highlight">benjamin</span></h1>
+    <p>
+      computer engineering student documenting my journey through 
+      embedded systems, low-level programming, and random projects 
+      that catch my interest.
+    </p>
+    <p class="cta">
+      currently working on stuff with microcontrollers and trying 
+      to understand how things work at the hardware level.
+    </p>
+  </section>
+
+  <section class="recent-posts">
+    <h2>recent posts</h2>
+    {posts.length > 0 ? (
+      posts.map(post => (
+        <PostCard
+          title={post.data.title}
+          date={post.data.date}
+          description={post.data.description}
+          slug={post.slug}
+          tags={post.data.tags}
+        />
+      ))
+    ) : (
+      <p class="no-posts">no posts yet. check back soon!</p>
+    )}
+    {posts.length > 0 && (
+      <a href="/blog" class="view-all">view all posts →</a>
+    )}
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    padding: 2rem 0 3rem;
+  }
+
+  .hero h1 {
+    font-size: 2.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .highlight {
+    color: var(--accent);
+  }
+
+  .hero p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    max-width: 540px;
+  }
+
+  .hero .cta {
+    margin-top: 1rem;
+    font-size: 0.95rem;
+  }
+
+  .recent-posts {
+    padding: 2rem 0;
+  }
+
+  .recent-posts h2 {
+    margin-bottom: 1rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .no-posts {
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .view-all {
+    display: inline-block;
+    margin-top: 1.5rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  .view-all:hover {
+    color: var(--accent);
+  }
+</style>

@@ -1,0 +1,77 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="about | ~/blog">
+  <section class="about">
+    <h1>about me</h1>
+    
+    <p>
+      hey! i'm a computer engineering student who loves digging into 
+      how things work at the lowest levels. this blog is where i 
+      document my projects, experiments, and things i learn along the way.
+    </p>
+
+    <h2>what i'm into</h2>
+    <ul>
+      <li>embedded systems & microcontrollers</li>
+      <li>low-level programming (C, assembly)</li>
+      <li>hardware/software interfaces</li>
+      <li>building things from scratch</li>
+      <li>understanding "how it actually works"</li>
+    </ul>
+
+    <h2>this blog</h2>
+    <p>
+      i started this blog to keep track of my projects and share 
+      what i learn. writing helps me understand things better, and 
+      maybe it'll help someone else too.
+    </p>
+    <p>
+      expect posts about embedded projects, programming deep-dives, 
+      tool setups, and random experiments.
+    </p>
+
+    <h2>links</h2>
+    <ul class="links">
+      <li><a href="https://github.com/Git-Hub-Benjamin" target="_blank" rel="noopener">github</a></li>
+    </ul>
+  </section>
+</BaseLayout>
+
+<style>
+  .about h1 {
+    margin-bottom: 1.5rem;
+  }
+
+  .about h2 {
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .about ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .about li {
+    position: relative;
+    padding-left: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .about li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+  }
+
+  .links li::before {
+    content: "~";
+  }
+</style>
