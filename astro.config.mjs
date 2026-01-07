@@ -1,7 +1,7 @@
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
-  site: 'https://bloggyblog.com',
+  site: 'https://git-hub-benjamin.github.io/bloggyblog',
   markdown: {
     shikiConfig: {
       theme: 'github-dark',
