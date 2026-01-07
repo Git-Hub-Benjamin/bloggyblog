@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 280" style="background: #0d1117;">
+  <!-- Title -->
+  <text x="200" y="25" font-family="monospace" font-size="18" fill="#58a6ff" text-anchor="middle" font-weight="bold">Simple LED Circuit</text>
+  
+  <!-- Battery -->
+  <g id="battery">
+    <!-- Positive terminal -->
+    <line x1="50" y1="80" x2="50" y2="120" stroke="#58a6ff" stroke-width="3"/>
+    <line x1="45" y1="85" x2="55" y2="85" stroke="#58a6ff" stroke-width="2"/>
+    <!-- Negative terminal -->
+    <line x1="50" y1="160" x2="50" y2="200" stroke="#8b949e" stroke-width="3"/>
+    <line x1="40" y1="165" x2="60" y2="165" stroke="#8b949e" stroke-width="2"/>
+    <line x1="45" y1="175" x2="55" y2="175" stroke="#8b949e" stroke-width="2"/>
+    <!-- Battery label -->
+    <text x="50" y="250" font-family="monospace" font-size="12" fill="#e6edf3" text-anchor="middle">5V</text>
+  </g>
+  
+  <!-- Top wire (positive) -->
+  <line x1="50" y1="80" x2="150" y2="80" stroke="#58a6ff" stroke-width="2"/>
+  
+  <!-- Resistor -->
+  <g id="resistor">
+    <rect x="150" y="70" width="60" height="20" fill="none" stroke="#79b8ff" stroke-width="2" rx="2"/>
+    <text x="180" y="92" font-family="monospace" font-size="11" fill="#e6edf3" text-anchor="middle">220Ω</text>
+  </g>
+  
+  <!-- Wire from resistor to LED -->
+  <line x1="210" y1="80" x2="280" y2="80" stroke="#58a6ff" stroke-width="2"/>
+  
+  <!-- LED -->
+  <g id="led">
+    <!-- LED body (triangle pointing down) -->
+    <polygon points="280,60 295,100 265,100" fill="none" stroke="#ff7b72" stroke-width="2"/>
+    <!-- Light rays -->
+    <line x1="270" y1="50" x2="260" y2="35" stroke="#ff7b72" stroke-width="1.5" stroke-dasharray="3,3"/>
+    <line x1="290" y1="50" x2="300" y2="35" stroke="#ff7b72" stroke-width="1.5" stroke-dasharray="3,3"/>
+    <!-- Anode (long) -->
+    <text x="280" y="110" font-family="monospace" font-size="10" fill="#e6edf3" text-anchor="middle">LED</text>
+  </g>
+  
+  <!-- Wire from LED down -->
+  <line x1="280" y1="100" x2="280" y2="140" stroke="#8b949e" stroke-width="2"/>
+  
+  <!-- Wire from LED to battery negative -->
+  <line x1="280" y1="140" x2="50" y2="140" stroke="#8b949e" stroke-width="2"/>
+  <line x1="50" y1="140" x2="50" y2="160" stroke="#8b949e" stroke-width="2"/>
+  
+  <!-- Legend -->
+  <g id="legend" transform="translate(0, 180)">
+    <text x="50" y="0" font-family="monospace" font-size="11" fill="#79b8ff">Positive (Current source)</text>
+    <text x="50" y="20" font-family="monospace" font-size="11" fill="#8b949e">Negative (Ground)</text>
+    <text x="50" y="40" font-family="monospace" font-size="11" fill="#ff7b72">LED (Light emitter)</text>
+    <text x="50" y="60" font-family="monospace" font-size="11" fill="#79b8ff">Resistor (Current limit)</text>
+  </g>
+</svg>

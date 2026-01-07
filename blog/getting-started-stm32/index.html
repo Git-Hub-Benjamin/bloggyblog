@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="en"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="My first steps with the STM32 microcontroller family - setup, toolchain, and blinking an LED."><link rel="icon" type="image/svg+xml" href="/favicon.svg"><title>Getting started with STM32 | ~/blog</title><style>:root{--bg: #0d1117;--bg-secondary: #161b22;--text: #e6edf3;--text-muted: #8b949e;--accent: #58a6ff;--accent-hover: #79b8ff;--border: #30363d;--code-bg: #1f2428}*{margin:0;padding:0;box-sizing:border-box}html{font-family:SF Mono,Fira Code,Consolas,monospace;background:var(--bg);color:var(--text);font-size:16px;line-height:1.7}body{min-height:100vh}.container{max-width:720px;margin:0 auto;padding:0 1.5rem;min-height:100vh;display:flex;flex-direction:column}header{padding:2rem 0;border-bottom:1px solid var(--border)}nav{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}.logo{font-size:1.25rem;font-weight:600;color:var(--accent);text-decoration:none}.logo:hover{color:var(--accent-hover)}.nav-links{display:flex;gap:1.5rem}.nav-links a{color:var(--text-muted);text-decoration:none;font-size:.9rem;transition:color .2s}.nav-links a:hover{color:var(--text)}main{flex:1;padding:3rem 0}footer{padding:2rem 0;border-top:1px solid var(--border);text-align:center}footer p{color:var(--text-muted);font-size:.85rem}a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent-hover);text-decoration:underline}h1,h2,h3,h4{font-weight:600;line-height:1.3;margin-bottom:1rem}h1{font-size:2rem}h2{font-size:1.5rem}h3{font-size:1.25rem}p{margin-bottom:1rem}code{background:var(--code-bg);padding:.2em .4em;border-radius:4px;font-size:.9em}pre{background:var(--code-bg);padding:1rem;border-radius:8px;overflow-x:auto;margin:1.5rem 0}pre code{background:none;padding:0}img{max-width:100%;border-radius:8px}ul,ol{margin:1rem 0;padding-left:1.5rem}li{margin-bottom:.5rem}blockquote{border-left:3px solid var(--accent);padding-left:1rem;margin:1.5rem 0;color:var(--text-muted);font-style:italic}hr{border:none;border-top:1px solid var(--border);margin:2rem 0}
+.post-header[data-astro-cid-gjtny2mx]{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}.post-header[data-astro-cid-gjtny2mx] time[data-astro-cid-gjtny2mx]{color:var(--text-muted);font-size:.9rem}.post-header[data-astro-cid-gjtny2mx] h1[data-astro-cid-gjtny2mx]{margin-top:.5rem;margin-bottom:.75rem}.tags[data-astro-cid-gjtny2mx]{display:flex;gap:.5rem;flex-wrap:wrap}.tag[data-astro-cid-gjtny2mx]{color:var(--accent);font-size:.85rem}.post-content[data-astro-cid-gjtny2mx]{line-height:1.8}.post-content[data-astro-cid-gjtny2mx] h2{margin-top:2.5rem}.post-content[data-astro-cid-gjtny2mx] h3{margin-top:2rem}.post-footer[data-astro-cid-gjtny2mx]{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border)}.post-footer[data-astro-cid-gjtny2mx] a[data-astro-cid-gjtny2mx]{color:var(--text-muted);font-size:.9rem}.post-footer[data-astro-cid-gjtny2mx] a[data-astro-cid-gjtny2mx]:hover{color:var(--text)}
+</style></head> <body> <div class="container"> <header> <nav> <a href="/" class="logo">~/blog</a> <div class="nav-links"> <a href="/">home</a> <a href="/blog">posts</a> <a href="/about">about</a> </div> </nav> </header> <main>  <article class="post" data-astro-cid-gjtny2mx> <header class="post-header" data-astro-cid-gjtny2mx> <time datetime="2024-12-28T00:00:00.000Z" data-astro-cid-gjtny2mx>December 28, 2024</time> <h1 data-astro-cid-gjtny2mx>Getting started with STM32</h1> <div class="tags" data-astro-cid-gjtny2mx> <span class="tag" data-astro-cid-gjtny2mx>#embedded</span><span class="tag" data-astro-cid-gjtny2mx>#stm32</span><span class="tag" data-astro-cid-gjtny2mx>#c</span> </div> </header> <div class="post-content" data-astro-cid-gjtny2mx>  <p>I’ve been wanting to move beyond Arduino and get into “real” embedded development. The STM32 family seemed like a good next step - they’re powerful, well-documented, and used in actual products.</p>
+<h2 id="the-hardware">The hardware</h2>
+<p>I picked up an <strong>STM32F401 Nucleo board</strong>. It’s cheap (~$15), has a built-in debugger, and the F401 chip is capable enough for learning without being overwhelming.</p>
+<p>Specs that matter:</p>
+<ul>
+<li>ARM Cortex-M4 @ 84MHz</li>
+<li>512KB Flash, 96KB RAM</li>
+<li>Tons of peripherals (SPI, I2C, UART, ADC, timers…)</li>
+</ul>
+<h2 id="setting-up-the-toolchain">Setting up the toolchain</h2>
+<p>The hardest part of embedded development is always the toolchain setup. Here’s what I’m using:</p>
+<h3 id="compiler-arm-gcc">Compiler: ARM GCC</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D"># On Ubuntu/Debian</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> apt</span><span style="color:#9ECBFF"> install</span><span style="color:#9ECBFF"> gcc-arm-none-eabi</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Verify installation</span></span>
+<span class="line"><span style="color:#B392F0">arm-none-eabi-gcc</span><span style="color:#79B8FF"> --version</span></span>
+<span class="line"></span></code></pre>
+<h3 id="debugger-openocd">Debugger: OpenOCD</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> apt</span><span style="color:#9ECBFF"> install</span><span style="color:#9ECBFF"> openocd</span></span>
+<span class="line"></span></code></pre>
+<h3 id="build-system-make">Build system: Make</h3>
+<p>Keeping it simple with Makefiles. No IDE dependency.</p>
+<h2 id="the-classic-blink">The classic blink</h2>
+<p>Every embedded journey starts with blinking an LED. Here’s the bare-metal version:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#F97583">#include</span><span style="color:#9ECBFF"> "stm32f4xx.h"</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">int</span><span style="color:#B392F0"> main</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">void</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#6A737D">    // Enable GPIOA clock</span></span>
+<span class="line"><span style="color:#E1E4E8">    RCC->AHB1ENR </span><span style="color:#F97583">|=</span><span style="color:#E1E4E8"> RCC_AHB1ENR_GPIOAEN;</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#6A737D">    // Configure PA5 as output (LED on Nucleo board)</span></span>
+<span class="line"><span style="color:#E1E4E8">    GPIOA->MODER </span><span style="color:#F97583">|=</span><span style="color:#E1E4E8"> GPIO_MODER_MODER5_0;</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#F97583">    while</span><span style="color:#E1E4E8"> (</span><span style="color:#79B8FF">1</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#E1E4E8">        GPIOA->ODR </span><span style="color:#F97583">^=</span><span style="color:#E1E4E8"> GPIO_ODR_OD5;</span><span style="color:#6A737D">  // Toggle LED</span></span>
+<span class="line"><span style="color:#E1E4E8">        </span></span>
+<span class="line"><span style="color:#6A737D">        // Crude delay</span></span>
+<span class="line"><span style="color:#F97583">        for</span><span style="color:#E1E4E8"> (</span><span style="color:#F97583">volatile</span><span style="color:#F97583"> int</span><span style="color:#E1E4E8"> i </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 0</span><span style="color:#E1E4E8">; i </span><span style="color:#F97583">&#x3C;</span><span style="color:#79B8FF"> 100000</span><span style="color:#E1E4E8">; i</span><span style="color:#F97583">++</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre>
+<p>No HAL, no libraries - just direct register manipulation. It’s verbose but you understand exactly what’s happening.</p>
+<h2 id="whats-next">What’s next</h2>
+<ul>
+<li>Proper delay using SysTick timer</li>
+<li>UART for debugging output</li>
+<li>Interrupt-driven GPIO</li>
+</ul>
+<p>The learning curve is steep but it’s satisfying to understand what’s actually happening at the hardware level.</p>  </div> <footer class="post-footer" data-astro-cid-gjtny2mx> <a href="/blog" data-astro-cid-gjtny2mx>← back to all posts</a> </footer> </article>  </main> <footer> <p>© 2026 · built with curiosity</p> </footer> </div> </body></html> 
