@@ -12,13 +12,14 @@ const { title, date, description, slug, tags = [] } = Astro.props;
 const formattedDate = date.toLocaleDateString('en-US', {
   year: 'numeric',
   month: 'short',
-  day: 'numeric'
+  day: 'numeric',
+  timeZone: 'UTC'
 });
 ---
 
 <article class="post-card">
   <time datetime={date.toISOString()}>{formattedDate}</time>
-  <h3><a href={`/blog/${slug}`}>{title}</a></h3>
+  <h3><a href={`${import.meta.env.BASE_URL}blog/${slug}`}>{title}</a></h3>
   <p>{description}</p>
   {tags.length > 0 && (
     <div class="tags">

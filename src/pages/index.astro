@@ -38,7 +38,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
       <p class="no-posts">no posts yet. check back soon!</p>
     )}
     {posts.length > 0 && (
-      <a href="/blog" class="view-all">view all posts →</a>
+      <a href={`${import.meta.env.BASE_URL}blog`} class="view-all">view all posts →</a>
     )}
   </section>
 </BaseLayout>

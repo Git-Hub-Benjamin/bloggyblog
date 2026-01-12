@@ -5,6 +5,7 @@ export interface Props {
 }
 
 const { title, description = "A blog about computer engineering projects and experiments" } = Astro.props;
+const BASE_URL = import.meta.env.BASE_URL;
 ---
 
 <!DOCTYPE html>
@@ -13,18 +14,18 @@ const { title, description = "A blog about computer engineering projects and exp
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href={`${BASE_URL}favicon.svg`} />
     <title>{title}</title>
   </head>
   <body>
     <div class="container">
       <header>
         <nav>
-          <a href="/" class="logo">~/blog</a>
+          <a href={BASE_URL} class="logo">~/blog</a>
           <div class="nav-links">
-            <a href="/">home</a>
-            <a href="/blog">posts</a>
-            <a href="/about">about</a>
+            <a href={BASE_URL}>home</a>
+            <a href={`${BASE_URL}blog`}>posts</a>
+            <a href={`${BASE_URL}about`}>about</a>
           </div>
         </nav>
       </header>
