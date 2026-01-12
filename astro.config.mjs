@@ -1,8 +1,12 @@
 import { defineConfig } from 'astro/config';
 
+// Detect if this is a build or dev environment
+const isBuild = process.argv.includes('build');
+const isProduction = process.env.NODE_ENV === 'production' || isBuild;
+
 export default defineConfig({
   site: 'https://git-hub-benjamin.github.io/bloggyblog',
-  base: process.env.NODE_ENV === 'production' ? '/bloggyblog' : '/',
+  base: isProduction ? '/bloggyblog' : '/',
   markdown: {
     shikiConfig: {
       theme: 'github-dark',
