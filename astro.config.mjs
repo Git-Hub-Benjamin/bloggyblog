@@ -6,7 +6,8 @@ const isProduction = process.env.NODE_ENV === 'production' || isBuild;
 
 export default defineConfig({
   site: 'https://git-hub-benjamin.github.io/bloggyblog',
-  base: isProduction ? '/bloggyblog' : '/',
+  base: isProduction ? '/bloggyblog/' : '/',
+  trailingSlash: 'always',
   markdown: {
     shikiConfig: {
       theme: 'github-dark',
