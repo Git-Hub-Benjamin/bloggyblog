@@ -1,0 +1,191 @@
+<!DOCTYPE html><html lang="en"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="Reverse-engineering the Sonos API and building a real-time volume display for a smart speaker."><link rel="icon" type="image/svg+xml" href="/bloggyblog/favicon.svg"><title>Building a Sonos Volume Monitor | ~/blog</title><style>:root{--bg: #0d1117;--bg-secondary: #161b22;--text: #e6edf3;--text-muted: #8b949e;--accent: #58a6ff;--accent-hover: #79b8ff;--border: #30363d;--code-bg: #1f2428}*{margin:0;padding:0;box-sizing:border-box}html{font-family:SF Mono,Fira Code,Consolas,monospace;background:var(--bg);color:var(--text);font-size:16px;line-height:1.7}body{min-height:100vh}.container{max-width:720px;margin:0 auto;padding:0 1.5rem;min-height:100vh;display:flex;flex-direction:column}header{padding:2rem 0;border-bottom:1px solid var(--border)}nav{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}.logo{font-size:1.25rem;font-weight:600;color:var(--accent);text-decoration:none}.logo:hover{color:var(--accent-hover)}.nav-links{display:flex;gap:1.5rem}.nav-links a{color:var(--text-muted);text-decoration:none;font-size:.9rem;transition:color .2s}.nav-links a:hover{color:var(--text)}main{flex:1;padding:3rem 0}footer{padding:2rem 0;border-top:1px solid var(--border);text-align:center}footer p{color:var(--text-muted);font-size:.85rem}a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent-hover);text-decoration:underline}h1,h2,h3,h4{font-weight:600;line-height:1.3;margin-bottom:1rem}h1{font-size:2rem}h2{font-size:1.5rem}h3{font-size:1.25rem}p{margin-bottom:1rem}code{background:var(--code-bg);padding:.2em .4em;border-radius:4px;font-size:.9em}pre{background:var(--code-bg);padding:1rem;border-radius:8px;overflow-x:auto;margin:1.5rem 0}pre code{background:none;padding:0}img{max-width:100%;border-radius:8px}ul,ol{margin:1rem 0;padding-left:1.5rem}li{margin-bottom:.5rem}blockquote{border-left:3px solid var(--accent);padding-left:1rem;margin:1.5rem 0;color:var(--text-muted);font-style:italic}hr{border:none;border-top:1px solid var(--border);margin:2rem 0}
+.post-header[data-astro-cid-gjtny2mx]{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}.post-header[data-astro-cid-gjtny2mx] time[data-astro-cid-gjtny2mx]{color:var(--text-muted);font-size:.9rem}.post-header[data-astro-cid-gjtny2mx] h1[data-astro-cid-gjtny2mx]{margin-top:.5rem;margin-bottom:.75rem}.tags[data-astro-cid-gjtny2mx]{display:flex;gap:.5rem;flex-wrap:wrap}.tag[data-astro-cid-gjtny2mx]{color:var(--accent);font-size:.85rem}.post-content[data-astro-cid-gjtny2mx]{line-height:1.8}.post-content[data-astro-cid-gjtny2mx] h2{margin-top:2.5rem}.post-content[data-astro-cid-gjtny2mx] h3{margin-top:2rem}.post-footer[data-astro-cid-gjtny2mx]{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border)}.post-footer[data-astro-cid-gjtny2mx] a[data-astro-cid-gjtny2mx]{color:var(--text-muted);font-size:.9rem}.post-footer[data-astro-cid-gjtny2mx] a[data-astro-cid-gjtny2mx]:hover{color:var(--text)}
+</style></head> <body> <div class="container"> <header> <nav> <a href="/bloggyblog/" class="logo">~/blog</a> <div class="nav-links"> <a href="/bloggyblog/">home</a> <a href="/bloggyblog/blog/">posts</a> <a href="/bloggyblog/about/">about</a> </div> </nav> </header> <main>  <article class="post" data-astro-cid-gjtny2mx> <header class="post-header" data-astro-cid-gjtny2mx> <time datetime="2025-01-06T00:00:00.000Z" data-astro-cid-gjtny2mx>January 6, 2025</time> <h1 data-astro-cid-gjtny2mx>Building a Sonos Volume Monitor</h1> <div class="tags" data-astro-cid-gjtny2mx> <span class="tag" data-astro-cid-gjtny2mx>#embedded</span><span class="tag" data-astro-cid-gjtny2mx>#raspberry-pi</span><span class="tag" data-astro-cid-gjtny2mx>#iot</span><span class="tag" data-astro-cid-gjtny2mx>#python</span> </div> </header> <div class="post-content" data-astro-cid-gjtny2mx>  <p>My family got a new Sonos speaker for the living room TV, and it sounds fantastic. But there was one annoying problem - <strong>no volume feedback</strong>. No lights, no display, nothing. You’d adjust the volume and hope it was at the right level. I decided to build a solution: a small display monitor that shows the current volume in real-time.</p>
+<h2 id="the-problem">The Problem</h2>
+<p>The Sonos Arc is a premium speaker, but the lack of visual feedback for volume is surprisingly frustrating. After some research, I discovered that Sonos devices expose a <strong>UPnP API</strong> that you can query to get the current volume and mute state. This was perfect - I could build a simple monitor without needing to reverse-engineer any proprietary protocols.</p>
+<h2 id="the-hardware">The Hardware</h2>
+<p>This was a surprisingly affordable project:</p>
+<ul>
+<li><strong>Raspberry Pi Pico W</strong> (~$6) - Microcontroller with built-in WiFi</li>
+<li><strong>0.96” OLED Display</strong> (~$5) - SSD1306, I2C interface</li>
+<li><strong>1.3” OLED Display</strong> (~$8) - Upgraded later for better visibility</li>
+<li><strong>Push Button</strong> (~$0.50) - Manual reinit trigger</li>
+<li><strong>Resistors &#x26; Header Pins</strong> (~$1) - For button debouncing and connections</li>
+<li><strong>3D Printed Enclosure</strong> - Custom case design</li>
+<li><strong>Micro USB Cable</strong> - For power</li>
+</ul>
+<p>Total cost: ~$21 for the initial prototype, plus the upgraded screen.</p>
+<h3 id="why-the-pico-w">Why the Pico W?</h3>
+<p>The Pico W has WiFi built-in, making it perfect for IoT projects. The only alternative would be adding a separate WiFi module, which adds complexity and cost. Plus, it’s tiny - easy to hide behind the TV.</p>
+<h2 id="hardware-setup">Hardware Setup</h2>
+<p><img  src="/bloggyblog/_astro/image-placeholder-components.BLvQPzkg_Z22tRcp.webp" alt="Sonos monitor components laid out" width="618" height="800" loading="lazy" decoding="async"></p>
+<p>The wiring is straightforward:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Pico W:</span></span>
+<span class="line"><span>- GPIO 0 (SDA) → OLED SDA</span></span>
+<span class="line"><span>- GPIO 1 (SCL) → OLED SCL</span></span>
+<span class="line"><span>- GPIO 2 → Button (with pull-up resistor)</span></span>
+<span class="line"><span>- 3V3 → OLED VCC, Button VCC</span></span>
+<span class="line"><span>- GND → OLED GND, Button GND (through 10kΩ pull-up)</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>I2C was the obvious choice - only two wires needed for the display, and the Pico handles it natively.</p>
+<h2 id="the-software-challenge">The Software Challenge</h2>
+<p>The initial version was simple: query the Sonos API every second and update the display if the volume changed. But as I added features, things got complicated.</p>
+<h3 id="features-added">Features Added</h3>
+<ol>
+<li><strong>Volume Display</strong> - Show the current volume as large digits</li>
+<li><strong>Mute Indicator</strong> - Different screen when muted</li>
+<li><strong>Time Display</strong> - Show the time periodically</li>
+<li><strong>Auto-Dim</strong> - Dim the screen after 30 seconds of no changes</li>
+<li><strong>Manual Reinit Button</strong> - Force WiFi/time sync</li>
+</ol>
+<h3 id="the-freezing-problem">The Freezing Problem</h3>
+<p>After running for a couple hours, the display would just go blank. No error messages, no reboot - it would just <strong>hang indefinitely</strong>. The Pico was stuck in some infinite loop, probably in the socket code or time sync logic.</p>
+<p>Debugging embedded systems without a serial console is painful. I initially tried adding better error handling, but the real culprit was subtle timing issues:</p>
+<ul>
+<li>The NTP socket would sometimes hang waiting for a response</li>
+<li>The SOAP request parsing could block if the network was slow</li>
+<li>Time.sleep() could get interrupted in weird ways</li>
+</ul>
+<p><strong>The Solution</strong>: Implement a <strong>watchdog timer</strong> that resets the device if it gets stuck. Additionally, I added an <strong>auto-reinit function</strong> that restarts WiFi and NTP every 5 minutes. This ensures the system stays responsive and any transient network issues are cleaned up automatically.</p>
+<h2 id="the-display-evolution">The Display Evolution</h2>
+<p>The first 0.96” display worked, but it was too small to read comfortably from across the room. When the 1.3” arrived, it made a huge difference. But this taught me an important lesson: <strong>always measure twice when dealing with displays</strong>.</p>
+<p><img  src="/bloggyblog/_astro/image-placeholder-components.BLvQPzkg_Z22tRcp.webp" alt="Failed 3D printed case designs" width="618" height="800" loading="lazy" decoding="async"></p>
+<p>I went through several iterations of 3D printed cases:</p>
+<ul>
+<li>First design was too tight - the header pins wouldn’t fit</li>
+<li>Second design didn’t account for the larger display</li>
+<li>Third design had thermal issues - the OLED could overheat</li>
+<li>Final design included proper ventilation and a clean cutout</li>
+</ul>
+<h2 id="the-code-structure">The Code Structure</h2>
+<p>Here’s the main loop logic:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#6A737D"># Main polling cycle</span></span>
+<span class="line"><span style="color:#F97583">while</span><span style="color:#79B8FF"> True</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#6A737D">    # Feed watchdog to prevent reset</span></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> wdt:</span></span>
+<span class="line"><span style="color:#E1E4E8">        wdt.feed()</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#6A737D">    # Periodic garbage collection</span></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> (now </span><span style="color:#F97583">-</span><span style="color:#E1E4E8"> last_gc_time) </span><span style="color:#F97583">></span><span style="color:#79B8FF"> GC_INTERVAL</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        gc.collect()</span></span>
+<span class="line"><span style="color:#E1E4E8">        last_gc_time </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> now</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#6A737D">    # Get current volume and mute state</span></span>
+<span class="line"><span style="color:#E1E4E8">    vol </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> get_volume(</span><span style="color:#79B8FF">SONOS_IP</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">    mute </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> get_mute(</span><span style="color:#79B8FF">SONOS_IP</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#6A737D">    # Check for changes</span></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> vol </span><span style="color:#F97583">!=</span><span style="color:#E1E4E8"> last_vol </span><span style="color:#F97583">or</span><span style="color:#E1E4E8"> mute </span><span style="color:#F97583">!=</span><span style="color:#E1E4E8"> last_mute:</span></span>
+<span class="line"><span style="color:#E1E4E8">        last_vol </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> vol</span></span>
+<span class="line"><span style="color:#E1E4E8">        last_mute </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> mute</span></span>
+<span class="line"><span style="color:#E1E4E8">        last_change_time </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> now</span></span>
+<span class="line"><span style="color:#E1E4E8">        show_speaker_state(vol, mute)</span></span>
+<span class="line"><span style="color:#E1E4E8">        set_bright()</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#6A737D">    # Show time periodically (every 60 seconds)</span></span>
+<span class="line"><span style="color:#F97583">    elif</span><span style="color:#E1E4E8"> (now </span><span style="color:#F97583">-</span><span style="color:#E1E4E8"> last_time_shown) </span><span style="color:#F97583">></span><span style="color:#79B8FF"> TIME_DISPLAY_INTERVAL</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        showing_time </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> True</span></span>
+<span class="line"><span style="color:#E1E4E8">        show_time()</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#6A737D">    # Dim after 30 seconds of no activity</span></span>
+<span class="line"><span style="color:#F97583">    elif</span><span style="color:#F97583"> not</span><span style="color:#E1E4E8"> is_dimmed </span><span style="color:#F97583">and</span><span style="color:#E1E4E8"> (now </span><span style="color:#F97583">-</span><span style="color:#E1E4E8"> last_change_time) </span><span style="color:#F97583">></span><span style="color:#79B8FF"> DIM_AFTER_SECONDS</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        set_dim()</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#E1E4E8">    time.sleep(</span><span style="color:#79B8FF">0.5</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span></code></pre>
+<h3 id="querying-the-sonos-api">Querying the Sonos API</h3>
+<p>The Sonos API uses SOAP (XML-based RPC). Here’s the volume query:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> get_volume</span><span style="color:#E1E4E8">(ip):</span></span>
+<span class="line"><span style="color:#9ECBFF">    """Get current volume from Sonos using SOAP/UPnP"""</span></span>
+<span class="line"><span style="color:#E1E4E8">    sock </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> None</span></span>
+<span class="line"><span style="color:#F97583">    try</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        body </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> SOAP_VOLUME</span><span style="color:#E1E4E8">.format(</span><span style="color:#79B8FF">SERVICE_TYPE</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">        request </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> (</span></span>
+<span class="line"><span style="color:#9ECBFF">            "POST /MediaRenderer/RenderingControl/Control HTTP/1.1</span><span style="color:#79B8FF">\r\n</span><span style="color:#9ECBFF">"</span></span>
+<span class="line"><span style="color:#9ECBFF">            "Host: </span><span style="color:#79B8FF">{}</span><span style="color:#9ECBFF">:1400</span><span style="color:#79B8FF">\r\n</span><span style="color:#9ECBFF">"</span></span>
+<span class="line"><span style="color:#9ECBFF">            "Content-Type: text/xml; charset=</span><span style="color:#79B8FF">\"</span><span style="color:#9ECBFF">utf-8</span><span style="color:#79B8FF">\"\r\n</span><span style="color:#9ECBFF">"</span></span>
+<span class="line"><span style="color:#9ECBFF">            "SOAPACTION: </span><span style="color:#79B8FF">\"{}</span><span style="color:#9ECBFF">#GetVolume</span><span style="color:#79B8FF">\"\r\n</span><span style="color:#9ECBFF">"</span></span>
+<span class="line"><span style="color:#9ECBFF">            "Content-Length: </span><span style="color:#79B8FF">{}\r\n\r\n{}</span><span style="color:#9ECBFF">"</span></span>
+<span class="line"><span style="color:#E1E4E8">        ).format(ip, </span><span style="color:#79B8FF">SERVICE_TYPE</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">len</span><span style="color:#E1E4E8">(body), body)</span></span>
+<span class="line"><span style="color:#E1E4E8">        </span></span>
+<span class="line"><span style="color:#E1E4E8">        sock </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> socket.socket()</span></span>
+<span class="line"><span style="color:#E1E4E8">        sock.settimeout(</span><span style="color:#79B8FF">2</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">        sock.connect((ip, </span><span style="color:#79B8FF">1400</span><span style="color:#E1E4E8">))</span></span>
+<span class="line"><span style="color:#E1E4E8">        sock.send(request.encode())</span></span>
+<span class="line"><span style="color:#E1E4E8">        </span></span>
+<span class="line"><span style="color:#6A737D">        # Receive response with limited retries</span></span>
+<span class="line"><span style="color:#E1E4E8">        data </span><span style="color:#F97583">=</span><span style="color:#F97583"> b</span><span style="color:#9ECBFF">""</span></span>
+<span class="line"><span style="color:#E1E4E8">        sock.settimeout(</span><span style="color:#79B8FF">1</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#F97583">        for</span><span style="color:#E1E4E8"> _ </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> range</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">20</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#F97583">            try</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">                chunk </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> sock.recv(</span><span style="color:#79B8FF">512</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#F97583">                if</span><span style="color:#F97583"> not</span><span style="color:#E1E4E8"> chunk:</span></span>
+<span class="line"><span style="color:#F97583">                    break</span></span>
+<span class="line"><span style="color:#E1E4E8">                data </span><span style="color:#F97583">+=</span><span style="color:#E1E4E8"> chunk</span></span>
+<span class="line"><span style="color:#F97583">                if</span><span style="color:#F97583"> b</span><span style="color:#9ECBFF">"&#x3C;/s:Envelope>"</span><span style="color:#F97583"> in</span><span style="color:#E1E4E8"> data:</span></span>
+<span class="line"><span style="color:#F97583">                    break</span></span>
+<span class="line"><span style="color:#F97583">            except</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">                break</span></span>
+<span class="line"><span style="color:#E1E4E8">        </span></span>
+<span class="line"><span style="color:#6A737D">        # Parse XML response</span></span>
+<span class="line"><span style="color:#E1E4E8">        text </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> data.decode(</span><span style="color:#9ECBFF">"utf-8"</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"ignore"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">        start </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> text.find(</span><span style="color:#9ECBFF">"&#x3C;CurrentVolume>"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#E1E4E8"> start </span><span style="color:#F97583">==</span><span style="color:#F97583"> -</span><span style="color:#79B8FF">1</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">            return</span><span style="color:#79B8FF"> None</span></span>
+<span class="line"><span style="color:#E1E4E8">        end </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> text.find(</span><span style="color:#9ECBFF">"&#x3C;/CurrentVolume>"</span><span style="color:#E1E4E8">, start)</span></span>
+<span class="line"><span style="color:#E1E4E8">        vol </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> int</span><span style="color:#E1E4E8">(text[start </span><span style="color:#F97583">+</span><span style="color:#79B8FF"> 15</span><span style="color:#E1E4E8">:end])</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> vol </span><span style="color:#F97583">//</span><span style="color:#79B8FF"> 2</span><span style="color:#6A737D">  # Sonos volume is 0-100, display as 0-50</span></span>
+<span class="line"><span style="color:#F97583">    except</span><span style="color:#79B8FF"> Exception</span><span style="color:#F97583"> as</span><span style="color:#E1E4E8"> e:</span></span>
+<span class="line"><span style="color:#79B8FF">        print</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"Volume error:"</span><span style="color:#E1E4E8">, e)</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> None</span></span>
+<span class="line"><span style="color:#F97583">    finally</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#E1E4E8"> sock:</span></span>
+<span class="line"><span style="color:#F97583">            try</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">                sock.close()</span></span>
+<span class="line"><span style="color:#F97583">            except</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">                pass</span></span>
+<span class="line"></span></code></pre>
+<h3 id="display-rendering">Display Rendering</h3>
+<p>The big digit rendering is pure pixel manipulation:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#79B8FF">DIGITS</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#9ECBFF">    "0"</span><span style="color:#E1E4E8">: [</span><span style="color:#F97583">0x</span><span style="color:#79B8FF">3E</span><span style="color:#E1E4E8">, </span><span style="color:#F97583">0x</span><span style="color:#79B8FF">51</span><span style="color:#E1E4E8">, </span><span style="color:#F97583">0x</span><span style="color:#79B8FF">49</span><span style="color:#E1E4E8">, </span><span style="color:#F97583">0x</span><span style="color:#79B8FF">45</span><span style="color:#E1E4E8">, </span><span style="color:#F97583">0x</span><span style="color:#79B8FF">3E</span><span style="color:#E1E4E8">],</span></span>
+<span class="line"><span style="color:#9ECBFF">    "1"</span><span style="color:#E1E4E8">: [</span><span style="color:#F97583">0x</span><span style="color:#79B8FF">00</span><span style="color:#E1E4E8">, </span><span style="color:#F97583">0x</span><span style="color:#79B8FF">42</span><span style="color:#E1E4E8">, </span><span style="color:#F97583">0x</span><span style="color:#79B8FF">7F</span><span style="color:#E1E4E8">, </span><span style="color:#F97583">0x</span><span style="color:#79B8FF">40</span><span style="color:#E1E4E8">, </span><span style="color:#F97583">0x</span><span style="color:#79B8FF">00</span><span style="color:#E1E4E8">],</span></span>
+<span class="line"><span style="color:#9ECBFF">    "2"</span><span style="color:#E1E4E8">: [</span><span style="color:#F97583">0x</span><span style="color:#79B8FF">42</span><span style="color:#E1E4E8">, </span><span style="color:#F97583">0x</span><span style="color:#79B8FF">61</span><span style="color:#E1E4E8">, </span><span style="color:#F97583">0x</span><span style="color:#79B8FF">51</span><span style="color:#E1E4E8">, </span><span style="color:#F97583">0x</span><span style="color:#79B8FF">49</span><span style="color:#E1E4E8">, </span><span style="color:#F97583">0x</span><span style="color:#79B8FF">46</span><span style="color:#E1E4E8">],</span></span>
+<span class="line"><span style="color:#6A737D">    # ... etc</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> draw_big_digit</span><span style="color:#E1E4E8">(x, y, digit, scale):</span></span>
+<span class="line"><span style="color:#9ECBFF">    """Draw a digit scaled up for readability"""</span></span>
+<span class="line"><span style="color:#E1E4E8">    bitmap </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> DIGITS</span><span style="color:#E1E4E8">[digit]</span></span>
+<span class="line"><span style="color:#F97583">    for</span><span style="color:#E1E4E8"> col, bits </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> enumerate</span><span style="color:#E1E4E8">(bitmap):</span></span>
+<span class="line"><span style="color:#F97583">        for</span><span style="color:#E1E4E8"> row </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> range</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">7</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#F97583">            if</span><span style="color:#E1E4E8"> bits </span><span style="color:#F97583">&#x26;</span><span style="color:#E1E4E8"> (</span><span style="color:#79B8FF">1</span><span style="color:#F97583"> &#x3C;&#x3C;</span><span style="color:#E1E4E8"> row):</span></span>
+<span class="line"><span style="color:#E1E4E8">                oled.fill_rect(x </span><span style="color:#F97583">+</span><span style="color:#E1E4E8"> col </span><span style="color:#F97583">*</span><span style="color:#E1E4E8"> scale, y </span><span style="color:#F97583">+</span><span style="color:#E1E4E8"> row </span><span style="color:#F97583">*</span><span style="color:#E1E4E8"> scale, scale, scale, </span><span style="color:#79B8FF">1</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> show_volume</span><span style="color:#E1E4E8">(vol):</span></span>
+<span class="line"><span style="color:#9ECBFF">    """Display volume number centered on screen"""</span></span>
+<span class="line"><span style="color:#E1E4E8">    oled.fill(</span><span style="color:#79B8FF">0</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">    vol_str </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> str</span><span style="color:#E1E4E8">(vol)</span></span>
+<span class="line"><span style="color:#E1E4E8">    scale </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 6</span></span>
+<span class="line"><span style="color:#E1E4E8">    digit_w </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 5</span><span style="color:#F97583"> *</span><span style="color:#E1E4E8"> scale</span></span>
+<span class="line"><span style="color:#E1E4E8">    total_w </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> len</span><span style="color:#E1E4E8">(vol_str) </span><span style="color:#F97583">*</span><span style="color:#E1E4E8"> digit_w </span><span style="color:#F97583">+</span><span style="color:#E1E4E8"> (</span><span style="color:#79B8FF">len</span><span style="color:#E1E4E8">(vol_str) </span><span style="color:#F97583">-</span><span style="color:#79B8FF"> 1</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">*</span><span style="color:#E1E4E8"> scale</span></span>
+<span class="line"><span style="color:#E1E4E8">    start_x </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> (</span><span style="color:#79B8FF">128</span><span style="color:#F97583"> -</span><span style="color:#E1E4E8"> total_w) </span><span style="color:#F97583">//</span><span style="color:#79B8FF"> 2</span></span>
+<span class="line"><span style="color:#E1E4E8">    start_y </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> (</span><span style="color:#79B8FF">64</span><span style="color:#F97583"> -</span><span style="color:#E1E4E8"> (</span><span style="color:#79B8FF">7</span><span style="color:#F97583"> *</span><span style="color:#E1E4E8"> scale)) </span><span style="color:#F97583">//</span><span style="color:#79B8FF"> 2</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#F97583">    for</span><span style="color:#E1E4E8"> i, ch </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> enumerate</span><span style="color:#E1E4E8">(vol_str):</span></span>
+<span class="line"><span style="color:#E1E4E8">        draw_big_digit(start_x </span><span style="color:#F97583">+</span><span style="color:#E1E4E8"> i </span><span style="color:#F97583">*</span><span style="color:#E1E4E8"> (digit_w </span><span style="color:#F97583">+</span><span style="color:#E1E4E8"> scale), start_y, ch, scale)</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#E1E4E8">    oled.show()</span></span>
+<span class="line"></span></code></pre>
+<h2 id="final-result">Final Result</h2>
+<p><img  src="/bloggyblog/_astro/image-placeholder-components.BLvQPzkg_Z22tRcp.webp" alt="Completed Sonos monitor installed under TV" width="618" height="800" loading="lazy" decoding="async"></p>
+<p>The monitor sits in a small 3D-printed case directly under the TV. It updates in real-time when you adjust the volume, shows the time every minute, and dims automatically to reduce light pollution at night.</p>
+<p><strong>Lessons learned:</strong></p>
+<ul>
+<li><strong>Always include a watchdog timer</strong> on long-running embedded systems</li>
+<li><strong>Test with realistic network conditions</strong> - simulation != reality</li>
+<li><strong>Periodic reinits are a valid band-aid</strong> when debugging is hard</li>
+<li><strong>Visible feedback matters</strong> - my family actually uses it daily</li>
+<li><strong>UPnP is surprisingly accessible</strong> - no proprietary reverse-engineering needed</li>
+</ul>
+<p>The project cost under $30 and solved a real problem. It’s running reliably for weeks at a time now, which is good enough for me.</p>  </div> <footer class="post-footer" data-astro-cid-gjtny2mx> <a href="/bloggyblog/blog/" data-astro-cid-gjtny2mx>← back to all posts</a> </footer> </article>  </main> <footer> <p>© 2026 · built with curiosity</p> </footer> </div> </body></html> 

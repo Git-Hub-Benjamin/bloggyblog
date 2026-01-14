@@ -1,0 +1,134 @@
+<!DOCTYPE html><html lang="en"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="Creating a Windows+Shift+S style QR code scanner - select a region, scan the code, open the link. No phone needed."><link rel="icon" type="image/svg+xml" href="/bloggyblog/favicon.svg"><title>Building a Screen QR Code Scanner for Linux | ~/blog</title><style>:root{--bg: #0d1117;--bg-secondary: #161b22;--text: #e6edf3;--text-muted: #8b949e;--accent: #58a6ff;--accent-hover: #79b8ff;--border: #30363d;--code-bg: #1f2428}*{margin:0;padding:0;box-sizing:border-box}html{font-family:SF Mono,Fira Code,Consolas,monospace;background:var(--bg);color:var(--text);font-size:16px;line-height:1.7}body{min-height:100vh}.container{max-width:720px;margin:0 auto;padding:0 1.5rem;min-height:100vh;display:flex;flex-direction:column}header{padding:2rem 0;border-bottom:1px solid var(--border)}nav{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}.logo{font-size:1.25rem;font-weight:600;color:var(--accent);text-decoration:none}.logo:hover{color:var(--accent-hover)}.nav-links{display:flex;gap:1.5rem}.nav-links a{color:var(--text-muted);text-decoration:none;font-size:.9rem;transition:color .2s}.nav-links a:hover{color:var(--text)}main{flex:1;padding:3rem 0}footer{padding:2rem 0;border-top:1px solid var(--border);text-align:center}footer p{color:var(--text-muted);font-size:.85rem}a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent-hover);text-decoration:underline}h1,h2,h3,h4{font-weight:600;line-height:1.3;margin-bottom:1rem}h1{font-size:2rem}h2{font-size:1.5rem}h3{font-size:1.25rem}p{margin-bottom:1rem}code{background:var(--code-bg);padding:.2em .4em;border-radius:4px;font-size:.9em}pre{background:var(--code-bg);padding:1rem;border-radius:8px;overflow-x:auto;margin:1.5rem 0}pre code{background:none;padding:0}img{max-width:100%;border-radius:8px}ul,ol{margin:1rem 0;padding-left:1.5rem}li{margin-bottom:.5rem}blockquote{border-left:3px solid var(--accent);padding-left:1rem;margin:1.5rem 0;color:var(--text-muted);font-style:italic}hr{border:none;border-top:1px solid var(--border);margin:2rem 0}
+.post-header[data-astro-cid-gjtny2mx]{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}.post-header[data-astro-cid-gjtny2mx] time[data-astro-cid-gjtny2mx]{color:var(--text-muted);font-size:.9rem}.post-header[data-astro-cid-gjtny2mx] h1[data-astro-cid-gjtny2mx]{margin-top:.5rem;margin-bottom:.75rem}.tags[data-astro-cid-gjtny2mx]{display:flex;gap:.5rem;flex-wrap:wrap}.tag[data-astro-cid-gjtny2mx]{color:var(--accent);font-size:.85rem}.post-content[data-astro-cid-gjtny2mx]{line-height:1.8}.post-content[data-astro-cid-gjtny2mx] h2{margin-top:2.5rem}.post-content[data-astro-cid-gjtny2mx] h3{margin-top:2rem}.post-footer[data-astro-cid-gjtny2mx]{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border)}.post-footer[data-astro-cid-gjtny2mx] a[data-astro-cid-gjtny2mx]{color:var(--text-muted);font-size:.9rem}.post-footer[data-astro-cid-gjtny2mx] a[data-astro-cid-gjtny2mx]:hover{color:var(--text)}
+</style></head> <body> <div class="container"> <header> <nav> <a href="/bloggyblog/" class="logo">~/blog</a> <div class="nav-links"> <a href="/bloggyblog/">home</a> <a href="/bloggyblog/blog/">posts</a> <a href="/bloggyblog/about/">about</a> </div> </nav> </header> <main>  <article class="post" data-astro-cid-gjtny2mx> <header class="post-header" data-astro-cid-gjtny2mx> <time datetime="2025-01-11T00:00:00.000Z" data-astro-cid-gjtny2mx>January 11, 2025</time> <h1 data-astro-cid-gjtny2mx>Building a Screen QR Code Scanner for Linux</h1> <div class="tags" data-astro-cid-gjtny2mx> <span class="tag" data-astro-cid-gjtny2mx>#linux</span><span class="tag" data-astro-cid-gjtny2mx>#kde</span><span class="tag" data-astro-cid-gjtny2mx>#tools</span><span class="tag" data-astro-cid-gjtny2mx>#productivity</span> </div> </header> <div class="post-content" data-astro-cid-gjtny2mx>  <p>I was working at my computer when I needed to scan a QR code from a webpage. On my phone, this is trivial - open the camera, point, done. But on my desktop? There was no quick way to do it. I’d have to pull out my phone, which breaks my workflow entirely.</p>
+<p>I wanted something as seamless as <strong>Windows+Shift+S</strong> (the screenshot shortcut I use constantly for homework, sharing context with AI, etc.). What if I could just select a region of my screen and have it automatically detect and open QR codes?</p>
+<h2 id="the-problem">The Problem</h2>
+<p>QR codes are everywhere now - documentation links, authentication flows, sharing URLs. But desktop workflows for scanning them are surprisingly clunky:</p>
+<ul>
+<li>Use your phone (requires context switching)</li>
+<li>Upload a screenshot to an online service (slow, privacy concerns)</li>
+<li>Install a heavy browser extension (limited to browser content)</li>
+</ul>
+<p>I wanted something <strong>instant and universal</strong> - works on any window, any content, triggered by a single keyboard shortcut.</p>
+<h2 id="the-solution">The Solution</h2>
+<p>A simple bash script that:</p>
+<ol>
+<li>Lets you select a screen region (like screenshot tools)</li>
+<li>Scans the selection for QR codes</li>
+<li>Automatically opens URLs in your browser</li>
+<li>Copies non-URL content to clipboard</li>
+</ol>
+<p>Bound to <strong>Meta+Shift+Q</strong> for quick access.</p>
+<h2 id="how-it-works">How It Works</h2>
+<p>The tool leverages existing Linux utilities rather than reinventing the wheel:</p>
+<h3 id="the-components">The Components</h3>
+<ul>
+<li><strong>Spectacle</strong> - KDE’s screenshot tool with region selection</li>
+<li><strong>zbar</strong> - Fast QR code detection library</li>
+<li><strong>xdg-open</strong> - Opens URLs in default browser</li>
+<li><strong>wl-clipboard</strong> - Wayland clipboard integration</li>
+<li><strong>libnotify</strong> - Desktop notifications</li>
+</ul>
+<h3 id="the-script">The Script</h3>
+<p>Here’s the core logic from <a href="qr-scanner.sh">qr-scanner.sh</a>:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D">#!/bin/bash</span></span>
+<span class="line"><span style="color:#6A737D"># Temporary file for the screenshot</span></span>
+<span class="line"><span style="color:#E1E4E8">TEMP_FILE</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">$(</span><span style="color:#B392F0">mktemp</span><span style="color:#9ECBFF"> /tmp/qr-screenshot-XXXXXX.png</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Capture screen region using spectacle</span></span>
+<span class="line"><span style="color:#B392F0">spectacle</span><span style="color:#79B8FF"> -r</span><span style="color:#79B8FF"> -b</span><span style="color:#79B8FF"> -n</span><span style="color:#79B8FF"> -o</span><span style="color:#9ECBFF"> "</span><span style="color:#E1E4E8">$TEMP_FILE</span><span style="color:#9ECBFF">"</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Check if screenshot was taken</span></span>
+<span class="line"><span style="color:#F97583">if</span><span style="color:#E1E4E8"> [ </span><span style="color:#F97583">!</span><span style="color:#F97583"> -s</span><span style="color:#9ECBFF"> "</span><span style="color:#E1E4E8">$TEMP_FILE</span><span style="color:#9ECBFF">"</span><span style="color:#E1E4E8"> ]; </span><span style="color:#F97583">then</span></span>
+<span class="line"><span style="color:#B392F0">    notify-send</span><span style="color:#9ECBFF"> "QR Scanner"</span><span style="color:#9ECBFF"> "Screenshot cancelled"</span><span style="color:#79B8FF"> -i</span><span style="color:#9ECBFF"> dialog-warning</span></span>
+<span class="line"><span style="color:#79B8FF">    exit</span><span style="color:#79B8FF"> 1</span></span>
+<span class="line"><span style="color:#F97583">fi</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Detect QR code using zbar</span></span>
+<span class="line"><span style="color:#E1E4E8">QR_CONTENT</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">$(</span><span style="color:#B392F0">zbarimg</span><span style="color:#79B8FF"> --quiet</span><span style="color:#79B8FF"> --raw</span><span style="color:#9ECBFF"> "</span><span style="color:#E1E4E8">$TEMP_FILE</span><span style="color:#9ECBFF">"</span><span style="color:#F97583"> 2></span><span style="color:#9ECBFF">/dev/null</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Check if QR code was found</span></span>
+<span class="line"><span style="color:#F97583">if</span><span style="color:#E1E4E8"> [ </span><span style="color:#F97583">-z</span><span style="color:#9ECBFF"> "</span><span style="color:#E1E4E8">$QR_CONTENT</span><span style="color:#9ECBFF">"</span><span style="color:#E1E4E8"> ]; </span><span style="color:#F97583">then</span></span>
+<span class="line"><span style="color:#B392F0">    notify-send</span><span style="color:#9ECBFF"> "QR Scanner"</span><span style="color:#9ECBFF"> "No QR code detected"</span><span style="color:#79B8FF"> -i</span><span style="color:#9ECBFF"> dialog-error</span></span>
+<span class="line"><span style="color:#79B8FF">    exit</span><span style="color:#79B8FF"> 1</span></span>
+<span class="line"><span style="color:#F97583">fi</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># If it's a URL, open it</span></span>
+<span class="line"><span style="color:#F97583">if</span><span style="color:#E1E4E8"> [[ </span><span style="color:#9ECBFF">"</span><span style="color:#E1E4E8">$QR_CONTENT</span><span style="color:#9ECBFF">"</span><span style="color:#F97583"> =~</span><span style="color:#E1E4E8"> ^https</span><span style="color:#F97583">?</span><span style="color:#E1E4E8">:// ]]; </span><span style="color:#F97583">then</span></span>
+<span class="line"><span style="color:#B392F0">    xdg-open</span><span style="color:#9ECBFF"> "</span><span style="color:#E1E4E8">$QR_CONTENT</span><span style="color:#9ECBFF">"</span></span>
+<span class="line"><span style="color:#F97583">else</span></span>
+<span class="line"><span style="color:#6A737D">    # Otherwise, copy to clipboard</span></span>
+<span class="line"><span style="color:#79B8FF">    echo</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> "</span><span style="color:#E1E4E8">$QR_CONTENT</span><span style="color:#9ECBFF">"</span><span style="color:#F97583"> |</span><span style="color:#B392F0"> wl-copy</span></span>
+<span class="line"><span style="color:#B392F0">    notify-send</span><span style="color:#9ECBFF"> "QR Scanner"</span><span style="color:#9ECBFF"> "Content copied to clipboard"</span><span style="color:#79B8FF"> -i</span><span style="color:#9ECBFF"> dialog-information</span></span>
+<span class="line"><span style="color:#F97583">fi</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Cleanup</span></span>
+<span class="line"><span style="color:#B392F0">rm</span><span style="color:#79B8FF"> -f</span><span style="color:#9ECBFF"> "</span><span style="color:#E1E4E8">$TEMP_FILE</span><span style="color:#9ECBFF">"</span></span>
+<span class="line"></span></code></pre>
+<p>The script is straightforward:</p>
+<ol>
+<li>Take a screenshot of the selected region</li>
+<li>Feed it to <code>zbarimg</code> for QR detection</li>
+<li>Open URLs automatically, copy everything else</li>
+</ol>
+<h3 id="the-keyboard-shortcut">The Keyboard Shortcut</h3>
+<p>The magic is in the global keyboard shortcut setup. The <a href="qr-scanner.desktop">qr-scanner.desktop</a> file registers the application with KDE:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="desktop"><code><span class="line"><span style="color:#79B8FF;font-weight:bold">[Desktop Entry]</span></span>
+<span class="line"><span style="color:#F97583">Name=</span><span style="color:#E1E4E8">QR Code Scanner</span></span>
+<span class="line"><span style="color:#F97583">Exec=</span><span style="color:#E1E4E8">/home/benji/bin/qr-scanner.sh</span></span>
+<span class="line"><span style="color:#F97583">Icon=</span><span style="color:#E1E4E8">camera-photo</span></span>
+<span class="line"><span style="color:#F97583">Type=</span><span style="color:#E1E4E8">Application</span></span>
+<span class="line"><span style="color:#F97583">Categories=</span><span style="color:#E1E4E8;font-weight:bold">Utility</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">X-KDE-Shortcuts=</span><span style="color:#E1E4E8">Meta+Shift+Q</span></span>
+<span class="line"></span></code></pre>
+<p>The <a href="install.sh">install.sh</a> script configures the global shortcut:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kwriteconfig5</span><span style="color:#79B8FF"> --file</span><span style="color:#9ECBFF"> kglobalshortcutsrc</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">    --group</span><span style="color:#9ECBFF"> "qr-scanner.desktop"</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">    --key</span><span style="color:#9ECBFF"> "_launch"</span><span style="color:#9ECBFF"> "Meta+Shift+Q,none,QR Code Scanner"</span></span>
+<span class="line"></span></code></pre>
+<p>Now <strong>Meta+Shift+Q</strong> triggers the scanner from anywhere on the system.</p>
+<h2 id="usage">Usage</h2>
+<p>The workflow is incredibly smooth:</p>
+<ol>
+<li>See a QR code on your screen (webpage, document, video call)</li>
+<li>Press <strong>Meta+Shift+Q</strong></li>
+<li>Screen dims with crosshair cursor</li>
+<li>Click and drag to select the QR code area</li>
+<li>Release - the URL opens instantly</li>
+</ol>
+<p>For non-URL QR codes (WiFi credentials, contact info), the content goes straight to your clipboard with a notification.</p>
+<h2 id="why-this-approach-works">Why This Approach Works</h2>
+<p><strong>Composability over complexity</strong>: Instead of writing a custom screenshot tool and QR decoder from scratch, I used existing battle-tested utilities. The script is 40 lines of bash - simple, maintainable, and fast.</p>
+<p><strong>Keyboard-first workflow</strong>: No mouse hunting for apps or menus. The shortcut is muscle memory after a day of use.</p>
+<p><strong>System-wide integration</strong>: Works everywhere - browsers, PDFs, video calls, virtual machines. If it’s on your screen, you can scan it.</p>
+<h2 id="installation">Installation</h2>
+<p>The whole thing is designed for easy setup. Clone the repo and run:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">./install.sh</span></span>
+<span class="line"></span></code></pre>
+<p>This handles:</p>
+<ul>
+<li>Installing dependencies (<code>zbar-tools</code>, <code>spectacle</code>, etc.)</li>
+<li>Copying scripts to <code>~/bin</code></li>
+<li>Setting up the desktop entry</li>
+<li>Configuring the keyboard shortcut</li>
+</ul>
+<p>Full instructions in the <a href="README.md">README.md</a>.</p>
+<h2 id="platform-notes">Platform Notes</h2>
+<p>This is built for <strong>KDE Plasma on Wayland</strong>, which is what I run. The key dependencies are:</p>
+<ul>
+<li><strong>Spectacle</strong> for region selection (KDE’s native tool)</li>
+<li><strong>wl-clipboard</strong> for Wayland clipboard access</li>
+<li><strong>zbar</strong> for QR detection (works everywhere)</li>
+</ul>
+<p>For other desktop environments, you’d swap out Spectacle for your native screenshot tool (GNOME Screenshot, maim, etc.). The QR detection logic is universal.</p>
+<h2 id="what-i-learned">What I Learned</h2>
+<p><strong>Shell scripting is underrated</strong>: Modern bash with proper error handling is perfectly adequate for small utilities like this. No need for Python or a compiled language.</p>
+<p><strong>Good UX requires thought</strong>: The first version just printed the QR content to a notification. But auto-opening URLs makes it genuinely useful - one less step to think about.</p>
+<p><strong>Existing tools are powerful</strong>: I considered writing a custom Qt app with region selection and QR detection. But combining existing utilities got me 90% of the way there in an afternoon.</p>
+<h2 id="final-thoughts">Final Thoughts</h2>
+<p>This is now part of my daily workflow. I scan QR codes from documentation, video calls, and shared screens without touching my phone. Total project time: ~2 hours. Cost: $0.</p>
+<p>The beauty of Linux desktop environments is this kind of extensibility. If you need a tool and it doesn’t exist, you can build it in an evening.</p>
+<hr>
+<p><strong>Project source</strong>: Available on GitHub (link when you publish)<br>
+<strong>License</strong>: MIT - see <a href="LICENSE">LICENSE</a></p>  </div> <footer class="post-footer" data-astro-cid-gjtny2mx> <a href="/bloggyblog/blog/" data-astro-cid-gjtny2mx>← back to all posts</a> </footer> </article>  </main> <footer> <p>© 2026 · built with curiosity</p> </footer> </div> </body></html> 
